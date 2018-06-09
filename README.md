@@ -18,6 +18,8 @@
 
 데이터의 shape를 맞춰 주기 위한 numpy
 
+데이터의 padding과 normalize를 위한 sklearn
+
 # 데이터 셋
 
 https://freemidi.org/
