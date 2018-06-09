@@ -63,7 +63,7 @@ def create_curve_seq(mel_arr):
             curr_t_diff = mel_arr[idx]['offset'] - mel_arr[idx-1]['offset']
             curve_seq.append([curr_p_diff, curr_t_diff])
     return curve_seq
-
+from sklearn.preprocessing import normalize
 from keras.preprocessing.sequence import pad_sequences
 def get_data_set_of_XY():
     org_path=os.getcwd()+'/mu/'
@@ -89,23 +89,27 @@ def get_data_set_of_XY():
                     arr.append(pickle.load(fp))
                     for _ in arr[i]:
                         Y_set.append(np_utils.to_categorical(i,class_num))
-    print(np.array(Y_set).shape)
     curve_seq_list = []
     for i,ar in enumerate(arr):
         for mel_arr in ar:
             curve_seq_list.append(create_curve_seq(mel_arr))
 
     arr=curve_seq_list
-    print(np.array(arr).shape)
     for i in range(len(arr)):
         arr[i]=np.array(arr[i])
         arr[i]=np.reshape(arr[i],(-1,1,2))
         print(arr[i].shape)
 
     arr=np.array(arr)
-    arr = pad_sequences(arr, padding='post')
+    print(arr[0])
+    arr = pad_sequences(arr, padding='post',maxlen=1000,dtype=np.float)
+    print(arr[0])
     arr= np.reshape(arr,(arr.shape[0],-1,2))
+    for i in range(len(arr)):
+        arr[i] = normalize(arr[i], axis=0, norm='max')
+
     print(arr.shape)
+    print(arr[0])
     Y_set=np.array(Y_set)
     Y_set=np.reshape(Y_set,(-1,5))
 
