@@ -8,7 +8,7 @@ from keras import layers, models
 file_name=os.getcwd()+'/sample.mid'
 midi_obj = music21.converter.parse(file_name)
 mel_data = train.create_mel_data_each_file(midi_obj)
-
+genre=os.listdir(os.getcwd()+'/mu/')
 
 class RNN(models.Sequential):
     def __init__(self, Time_step, Filter_num, Nout):
@@ -55,8 +55,8 @@ model.compile(loss='categorical_crossentropy',
 score = model.predict(arr,verbose=0)
 
 print(score)
-print('Classisc 일 확률 : ',score[0][0])
-print('Country 일 확률 : ',score[0][1])
-print('Dance 일 확률 : ',score[0][2])
-print('Jazz 일 확률 : ',score[0][3])
-print('Rock 일 확률 : ',score[0][4])
+print(genre[0]+' 일 확률 : ',score[0][0])
+print(genre[1]+' 일 확률 : ',score[0][1])
+print(genre[2]+' 일 확률 : ',score[0][2])
+print(genre[3]+' 일 확률 : ',score[0][3])
+print(genre[4]+' 일 확률 : ',score[0][4])
