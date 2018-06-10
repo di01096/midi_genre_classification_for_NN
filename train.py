@@ -10,6 +10,7 @@ from keras.preprocessing.sequence import pad_sequences
 def create_mel_data_each_file(midi_obj):
     c = midi_obj.flat.getElementsByClass(music21.instrument.Instrument)
     mel_data = []
+
     for i, m in enumerate(midi_obj):
         inst = None
         mel_data.append(dict())
@@ -55,7 +56,6 @@ def create_mel_data_each_file(midi_obj):
                         mel_data[i][n.offset]['note'] = p.midi
                     prev_p = p.midi
                 mel_data[i][n.offset]['instrument'] = inst
-    print('finished..')
     return mel_data
 
 def get_midi_set(data_path,path_name):
@@ -65,20 +65,24 @@ def get_midi_set(data_path,path_name):
             file_list.append(data_path + file_name)
     mel_arr_list = []
     for file_name in file_list:
+        print(file_name + 'get data')
         midi_obj = music21.converter.parse(file_name)
         mel_data = create_mel_data_each_file(midi_obj)
+        print('finished..')
 
         mel_arr = []
         for i,mel_data_i in enumerate(mel_data):
             for key, value in sorted(mel_data_i.items()):
                 mel_arr.append(mel_data_i[key])
         mel_arr_list.append(mel_arr)
+    print('data set saving..')
     preprocessed_dir = "./preprocessed_data/"
     if not os.path.exists(preprocessed_dir):
         os.makedirs(preprocessed_dir)
 
     with open(preprocessed_dir + path_name+"_mel_arr_list.p", "wb") as fp:
         pickle.dump(mel_arr_list, fp)
+    print('save finished..')
     return mel_arr_list
 def create_curve_seq(mel_arr):
     curve_seq = []
@@ -99,17 +103,18 @@ def get_data_set_of_XY():
     class_num=len(paths)
     for i,_ in enumerate(paths):
         paths[i]=str(org_path)+str(paths[i])+'/'
-    print(paths)
     Y_set=[]
     arr=[]
     name=os.listdir(org_path)
     if not(os.path.isdir(os.getcwd()+preprocessed_dir)):
+        print('getting midi file set..')
         for i,p in enumerate(paths):
             n=name[i]
             arr.append(get_midi_set(p,n))
             Y_set.append(np_utils.to_categorical(i,class_num) * len(arr[i]))
 
     else:
+        print('getting midi file set from dir(preprocessed_data)')
         for i,file_name in enumerate(os.listdir(os.getcwd()+preprocessed_dir)):
             if file_name.endswith('.p') or file_name.endswith('.p'):
                 with open(os.getcwd() + preprocessed_dir + file_name, "rb") as fp:
@@ -120,7 +125,7 @@ def get_data_set_of_XY():
     for ar in arr:
         for mel_arr in ar:
             curve_seq_list.append(create_curve_seq(mel_arr))
-
+    print('preprocessing..')
     arr=curve_seq_list
 
     arr=np.array(arr)
@@ -129,10 +134,10 @@ def get_data_set_of_XY():
     for i in range(len(arr)):
         arr[i] = normalize(arr[i], axis=0, norm='max')
 
-    print(arr.shape)
+
     Y_set=np.array(Y_set)
     Y_set=np.reshape(Y_set,(-1,5))
-
+    print('prepprocessing finished..')
     return arr,Y_set
 
 # =============================================
@@ -169,9 +174,8 @@ def main():
     Nout = number_of_class
 
     X_train, Y_train= get_data_set_of_XY()
-    print(Y_train)
     model = RNN(X_train.shape[1], Filter_num, Nout)
-    model.fit(X_train, Y_train, epochs=15, batch_size=1, validation_split=0.2)
+    model.fit(X_train, Y_train, epochs=50, batch_size=1, validation_split=0.2)
     model.save('model_1.h5')
     model_json = model.to_json()
     with open("model.json", "w") as json_file:
