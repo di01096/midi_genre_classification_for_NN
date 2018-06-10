@@ -4,30 +4,58 @@ import music21
 import os
 import pickle
 import numpy as np
+from sklearn.preprocessing import normalize
+from keras.preprocessing.sequence import pad_sequences
 
 def create_mel_data_each_file(midi_obj):
-    mel_data = dict()
+    c = midi_obj.flat.getElementsByClass(music21.instrument.Instrument)
+    mel_data = []
+    for i, m in enumerate(midi_obj):
+        inst = None
+        mel_data.append(dict())
+        for n in m:
+            if (n in c):
+                inst = n.midiProgram
 
-    #print(len(midi_obj.flat.getElementsByClass(music21.chord.Chord)))
-    for n in midi_obj.flat.getElementsByClass(music21.chord.Chord):
-        if n.offset not in mel_data:
-            mel_data[n.offset] = dict()
-        mel_data[n.offset]['offset'] = n.offset
-        for p in n.pitches:
-            mel_data[n.offset]['note'] = p.midi
-
-    #print(len(midi_obj.flat.getElementsByClass(music21.note.Note)))
-    for n in midi_obj.flat.getElementsByClass(music21.note.Note):
-        if n.offset not in mel_data:
-            mel_data[n.offset] = dict()
-        mel_data[n.offset]['offset'] = n.offset
-        prev_p = 0
-        for p in n.pitches:
-            if prev_p < p.midi:
-                mel_data[n.offset]['note'] = p.midi
-            prev_p = p.midi
-    print(len(mel_data))
-
+            if (type(n) == music21.stream.Voice):
+                for x in n:
+                    if (x in c):
+                        inst = x.midiProgram
+                    if (type(x) == music21.chord.Chord):
+                        if x.offset not in mel_data[i]:
+                            mel_data[i][x.offset] = dict()
+                        mel_data[i][x.offset]['offset'] = x.offset
+                        for p in x.pitches:
+                            mel_data[i][x.offset]['note'] = p.midi
+                        mel_data[i][x.offset]['instrument'] = inst
+                    if (type(x) == music21.note.Note):
+                        if x.offset not in mel_data[i]:
+                            mel_data[i][x.offset] = dict()
+                        mel_data[i][x.offset]['offset'] = x.offset
+                        prev_p = 0
+                        for p in x.pitches:
+                            if prev_p < p.midi:
+                                mel_data[i][x.offset]['note'] = p.midi
+                            prev_p = p.midi
+                        mel_data[i][x.offset]['instrument'] = inst
+            if (type(n) == music21.chord.Chord):
+                if n.offset not in mel_data[i]:
+                    mel_data[i][n.offset] = dict()
+                mel_data[i][n.offset]['offset'] = n.offset
+                for p in n.pitches:
+                    mel_data[i][n.offset]['note'] = p.midi
+                mel_data[i][n.offset]['instrument'] = inst
+            if (type(n) == music21.note.Note):
+                if n.offset not in mel_data[i]:
+                    mel_data[i][n.offset] = dict()
+                mel_data[i][n.offset]['offset'] = n.offset
+                prev_p = 0
+                for p in n.pitches:
+                    if prev_p < p.midi:
+                        mel_data[i][n.offset]['note'] = p.midi
+                    prev_p = p.midi
+                mel_data[i][n.offset]['instrument'] = inst
+    print('finished..')
     return mel_data
 
 def get_midi_set(data_path,path_name):
@@ -35,17 +63,15 @@ def get_midi_set(data_path,path_name):
     for file_name in os.listdir(os.path.expanduser(data_path)):
         if file_name.endswith('.mid') or file_name.endswith('.midi'):
             file_list.append(data_path + file_name)
-    print(file_list)
     mel_arr_list = []
     for file_name in file_list:
-        print(file_name)
         midi_obj = music21.converter.parse(file_name)
         mel_data = create_mel_data_each_file(midi_obj)
 
         mel_arr = []
-        for key, value in sorted(mel_data.items()):
-            mel_arr.append(mel_data[key])
-
+        for i,mel_data_i in enumerate(mel_data):
+            for key, value in sorted(mel_data_i.items()):
+                mel_arr.append(mel_data_i[key])
         mel_arr_list.append(mel_arr)
     preprocessed_dir = "./preprocessed_data/"
     if not os.path.exists(preprocessed_dir):
@@ -54,17 +80,18 @@ def get_midi_set(data_path,path_name):
     with open(preprocessed_dir + path_name+"_mel_arr_list.p", "wb") as fp:
         pickle.dump(mel_arr_list, fp)
     return mel_arr_list
-
 def create_curve_seq(mel_arr):
     curve_seq = []
     if(len(mel_arr)>1):
         for idx in range(1, len(mel_arr)):
             curr_p_diff = mel_arr[idx]['note'] - mel_arr[idx-1]['note']
             curr_t_diff = mel_arr[idx]['offset'] - mel_arr[idx-1]['offset']
-            curve_seq.append([curr_p_diff, curr_t_diff])
+            if mel_arr[idx]['instrument']==None:
+                x=0
+            else:
+                x=mel_arr[idx]['instrument']+1
+            curve_seq.append([curr_p_diff, curr_t_diff,x])
     return curve_seq
-from sklearn.preprocessing import normalize
-from keras.preprocessing.sequence import pad_sequences
 def get_data_set_of_XY():
     org_path=os.getcwd()+'/mu/'
     preprocessed_dir = "/preprocessed_data/"
@@ -80,7 +107,7 @@ def get_data_set_of_XY():
         for i,p in enumerate(paths):
             n=name[i]
             arr.append(get_midi_set(p,n))
-            Y_set.append(np_utils.to_categorical(i,class_num))
+            Y_set.append(np_utils.to_categorical(i,class_num) * len(arr[i]))
 
     else:
         for i,file_name in enumerate(os.listdir(os.getcwd()+preprocessed_dir)):
@@ -90,26 +117,19 @@ def get_data_set_of_XY():
                     for _ in arr[i]:
                         Y_set.append(np_utils.to_categorical(i,class_num))
     curve_seq_list = []
-    for i,ar in enumerate(arr):
+    for ar in arr:
         for mel_arr in ar:
             curve_seq_list.append(create_curve_seq(mel_arr))
 
     arr=curve_seq_list
-    for i in range(len(arr)):
-        arr[i]=np.array(arr[i])
-        arr[i]=np.reshape(arr[i],(-1,1,2))
-        print(arr[i].shape)
 
     arr=np.array(arr)
-    print(arr[0])
     arr = pad_sequences(arr, padding='post',maxlen=1000,dtype=np.float)
-    print(arr[0])
-    arr= np.reshape(arr,(arr.shape[0],-1,2))
+    arr= np.reshape(arr,(arr.shape[0],-1,3))
     for i in range(len(arr)):
         arr[i] = normalize(arr[i], axis=0, norm='max')
 
     print(arr.shape)
-    print(arr[0])
     Y_set=np.array(Y_set)
     Y_set=np.reshape(Y_set,(-1,5))
 
@@ -125,18 +145,19 @@ class RNN(models.Sequential):
     def __init__(self, Time_step, Filter_num, Nout):
         super().__init__()
 
-        self.add(layers.LSTM(Filter_num,input_shape=(Time_step,2),return_sequences=True))
+        self.add(layers.LSTM(Filter_num,input_shape=(Time_step,3),return_sequences=True))
+        self.add(layers.BatchNormalization())
+        self.add(layers.LSTM(Filter_num, input_shape=(Time_step, 3), return_sequences=True))
         self.add(layers.BatchNormalization())
         self.add(layers.LSTM(Filter_num))
         self.add(layers.BatchNormalization())
+        self.add(layers.Dropout(0.2))
         self.add(layers.Dense(Nout, activation='softmax'))
         self.compile(loss='categorical_crossentropy',
                      optimizer='adam',
                      metrics=['accuracy'])
 
-        model_json = self.to_json()
-        with open("model.json", "w") as json_file:
-            json_file.write(model_json)
+
 
 
 
@@ -150,7 +171,11 @@ def main():
     X_train, Y_train= get_data_set_of_XY()
     print(Y_train)
     model = RNN(X_train.shape[1], Filter_num, Nout)
-    history=model.fit(X_train, Y_train, epochs=10, batch_size=1, validation_split=0.2)
+    model.fit(X_train, Y_train, epochs=15, batch_size=1, validation_split=0.2)
+    model.save('model_1.h5')
+    model_json = model.to_json()
+    with open("model.json", "w") as json_file:
+        json_file.write(model_json)
     model.save_weights("model.h5")
     print("Saved model to disk")
 
