@@ -1,62 +1,46 @@
 import train
-import music21
 import os
 import numpy as np
-from numpy import argmax
 # 분류 DNN 모델 구현 ########################
-from keras import layers, models
-file_name=os.getcwd()+'/sample.mid'
-midi_obj = music21.converter.parse(file_name)
-mel_data = train.create_mel_data_each_file(midi_obj)
 genre=os.listdir(os.getcwd()+'/mu/')
+predic_dir='/predict/'
+arr1,_=train.get_data_set_of_XY(d=predic_dir,predict=True)
 
-class RNN(models.Sequential):
-    def __init__(self, Time_step, Filter_num, Nout):
+
+from keras import layers, models
+
+class DNN(models.Sequential):
+    def __init__(self, instrument_num,Time_step, Nout):
         super().__init__()
-
-        self.add(layers.LSTM(Filter_num,input_shape=(Time_step,3),return_sequences=True))
-        self.add(layers.BatchNormalization())
-        self.add(layers.LSTM(Filter_num, input_shape=(Time_step, 3), return_sequences=True))
-        self.add(layers.BatchNormalization())
-        self.add(layers.LSTM(Filter_num))
+        self.add(layers.Dense(128,input_shape=(instrument_num,Time_step,2),activation='relu'))
         self.add(layers.BatchNormalization())
         self.add(layers.Dropout(0.2))
+        self.add(layers.Dense(64, activation='relu'))
+        self.add(layers.BatchNormalization())
+        self.add(layers.Dropout(0.2))
+        self.add(layers.Dense(32, activation='relu'))
+        self.add(layers.BatchNormalization())
+        self.add(layers.Dropout(0.2))
+        self.add(layers.Flatten())
         self.add(layers.Dense(Nout, activation='softmax'))
         self.compile(loss='categorical_crossentropy',
                      optimizer='adam',
                      metrics=['accuracy'])
-
-mel_arr = []
-for i, mel_data_i in enumerate(mel_data):
-    for key, value in sorted(mel_data_i.items()):
-        mel_arr.append(mel_data_i[key])
-print(mel_arr)
-curve_seq_list=train.create_curve_seq(mel_arr)
-print(curve_seq_list)
-arr=curve_seq_list
-
-arr=np.array([arr])
-print(arr)
-arr = train.pad_sequences(arr,padding='post',maxlen=1000,dtype=np.float)
-print(arr)
-arr= np.reshape(arr,(arr.shape[0],-1,3))
-for i in range(len(arr)):
-    arr[i] = train.normalize(arr[i], axis=0, norm='max')
-print(arr.shape)
 # 2. 모델 불러오기
-
-from keras.models import load_model
-model= RNN(1000,64,5)
+model = DNN(arr1.shape[1],arr1.shape[2],  len(genre))
 model.load_weights('model.h5')
 model.compile(loss='categorical_crossentropy',
-                     optimizer='adam',
-                     metrics=['accuracy'])
+                      optimizer='adam',
+                      metrics=['accuracy'])
+x=os.listdir(os.getcwd()+predic_dir)
+for i,arr in enumerate(arr1):
 # model evaluation
-score = model.predict(arr,verbose=0)
-
-print(score)
-print(genre[0]+' 일 확률 : ',score[0][0])
-print(genre[1]+' 일 확률 : ',score[0][1])
-print(genre[2]+' 일 확률 : ',score[0][2])
-print(genre[3]+' 일 확률 : ',score[0][3])
-print(genre[4]+' 일 확률 : ',score[0][4])
+    arr=np.reshape(arr,(1,arr.shape[0],arr.shape[1],arr.shape[2]))
+    score = model.predict(arr,verbose=0)
+    print(x[i])
+    print(score)
+    print(genre[0]+' 일 확률 : ',score[0][0])
+    print(genre[1]+' 일 확률 : ',score[0][1])
+    print(genre[2]+' 일 확률 : ',score[0][2])
+    print(genre[3]+' 일 확률 : ',score[0][3])
+    print(genre[4]+' 일 확률 : ',score[0][4])
