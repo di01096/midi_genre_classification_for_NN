@@ -10,7 +10,7 @@
 
 # 모듈
 
-파이썬에서 미디파일을 사용하기 위한 music21
+파이썬에서 미디파일을 사용하기 위한 [music21](http://web.mit.edu/music21/)
 
 신경망모델을 만들기 위한 keras,tensorflow
 
