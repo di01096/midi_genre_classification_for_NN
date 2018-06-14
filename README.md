@@ -35,8 +35,10 @@ train_set과 validation_set의 8:2 비율로 학습을 할 예정.
 각각의 음들을 악보에 표현하면 위 그림처럼 되서 우리는 그중에서 파란색 화살표와 빨간색 화살표를 사용할 예정.
 
 파란색 화살표는 음사이의 시간차 빨간색 화살표는 음사이의 음정의 차로 생각하면 될 것.
+diff
++ this will be highlighted in green
+- this will be highlighted in red
 
-<span style="color: green"> Some green text </span>
 # 모델
 
 (작성중, 코딩역시 작성중)
