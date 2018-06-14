@@ -56,3 +56,8 @@ Y데이터는 One Hot 코드로 5개의 장르를 선택하도록 만듬. (ex [0
 # 모델
 
 (작성중, 코딩역시 작성중)
+
+# 레퍼런스
+
+https://maclab-kaist.github.io/DeepArt/    (미디파일 선처리법)
+https://tykimos.github.io/2017/06/10/Model_Save_Load/    (케라스 학습모델 저장법)
