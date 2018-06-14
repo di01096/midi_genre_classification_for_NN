@@ -12,13 +12,13 @@
 
 파이썬에서 미디파일을 사용하기 위한 [music21](http://web.mit.edu/music21/)
 
-신경망모델을 만들기 위한 keras,tensorflow
+신경망모델을 만들기 위한 [keras](https://keras.io/) , [tensorflow](https://github.com/tensorflow/tensorflow)
 
-중간 데이터셋을 저장하기 위한 pickle
+중간 데이터셋을 저장하기 위한 [pickle](https://wayhome25.github.io/cs/2017/04/04/cs-04/) / 출처 : 초보몽키의 개발공부로그
 
-데이터의 shape를 맞춰 주기 위한 numpy
+데이터의 shape를 맞춰 주기 위한 [numpy](https://github.com/numpy/numpy)
 
-데이터의 padding과 normalize를 위한 sklearn
+데이터의 padding과 normalize를 위한 [sklearn](https://github.com/scikit-learn/scikit-learn)
 
 # 데이터 셋
 
