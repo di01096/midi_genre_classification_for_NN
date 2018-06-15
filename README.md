@@ -24,6 +24,8 @@
 
 https://freemidi.org/
 
+www.piano-midi.de
+
 위 링크에서 가장 동떨어진 장르로 클래식,재즈,컨츄리,댄스,락 으로 대략 100곡 정도를 모아서 사용.
 
 train_set과 validation_set의 8:2 비율로 학습을 할 예정.
