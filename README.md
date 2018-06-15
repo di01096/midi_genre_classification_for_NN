@@ -26,6 +26,18 @@ https://freemidi.org/
 
 www.piano-midi.de
 
+http://www.tadpoletunes.com/songs/songs.htm
+
+http://midkar.com/jazz/jazz_13.html
+
+http://midkar.com/country
+
+https://freemidi.org/genre-country
+
+http://www.midiworld.com/search/4/?q=country
+
+http://www.midihifi.fr/playlist-jazz
+
 위 링크에서 가장 동떨어진 장르로 클래식,재즈,컨츄리,댄스,락 으로 대략 100곡 정도를 모아서 사용.
 
 train_set과 validation_set의 8:2 비율로 학습을 할 예정.
