@@ -40,7 +40,7 @@ def _store_note(mel_data, track_idx, note, inst):
 
 def create_mel_data_each_file(midi_obj):
     """MIDI 파일 하나에서 트랙별 멜로디 데이터(음정·offset·악기)를 추출한다."""
-    c = midi_obj.flat.getElementsByClass(music21.instrument.Instrument)
+    c = midi_obj.flatten().getElementsByClass(music21.instrument.Instrument)
     mel_data = []
 
     for i, m in enumerate(midi_obj):

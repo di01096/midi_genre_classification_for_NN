@@ -3,7 +3,7 @@ model.py
 MIDI 장르 분류를 위한 CNN 기반 신경망 모델 정의.
 """
 
-from tensorflow.keras import layers, models
+from tensorflow.keras import layers, models, Input
 
 
 class NN(models.Sequential):
@@ -22,9 +22,11 @@ class NN(models.Sequential):
         super().__init__()
         feature_shape = (input_shape_4d[1], input_shape_4d[2], input_shape_4d[3])
 
+        self.add(Input(shape=feature_shape))
+
         # Conv Block 1
         self.add(layers.Conv2D(8, kernel_size=(3, 3), activation='relu',
-                               padding='same', input_shape=feature_shape))
+                               padding='same'))
         self.add(layers.Dropout(0.5))
         self.add(layers.BatchNormalization())
         self.add(layers.MaxPool2D())
