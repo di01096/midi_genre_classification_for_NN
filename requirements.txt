@@ -1,0 +1,5 @@
+tensorflow>=2.11
+music21
+numpy
+scikit-learn
+matplotlib
